@@ -225,7 +225,7 @@ export default function FacturasList({ facturas, loading, error, onEliminar }) {
               </span>
               <button
                 onClick={() => abrirModal(factura)}
-                className="p-1.5 rounded-lg text-zinc-600 cursor-pointer hover:text-red-400 hover:bg-red-950/40 transition-colors opacity-0 group-hover:opacity-100"
+                className="p-1.5 rounded-lg text-zinc-600 cursor-pointer hover:text-red-400 hover:bg-red-950/40 transition-colors opacity-100 ml-auto md:m-auto md:opacity-0 md:group-hover:opacity-100"
                 title="Eliminar factura"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
