@@ -1,0 +1,46 @@
+import { supabase } from '../supabaseClient'
+
+export async function fetchFacturas() {
+  const { data, error } = await supabase
+    .from('facturas')
+    .select('*')
+    .order('created_at', { ascending: false })
+
+  if (error) throw new Error('No se pudo cargar el historial de facturas. Intenta recargar la página.')
+  return data
+}
+
+export async function searchFacturas(query) {
+  const { data, error } = await supabase
+    .from('facturas')
+    .select('*')
+    .ilike('proveedor', `%${query}%`)
+    .order('created_at', { ascending: false })
+
+  if (error) throw new Error('No se pudo realizar la búsqueda. Intenta de nuevo.')
+  return data
+}
+
+export async function deleteFactura(id) {
+  const { error } = await supabase
+    .from('facturas')
+    .delete()
+    .eq('id', id)
+
+  if (error) {
+    if (error.code === '42501') throw new Error('Sin permisos para eliminar facturas. Verifica las políticas de seguridad en Supabase.')
+    throw new Error('No se pudo eliminar la factura. Intenta de nuevo.')
+  }
+}
+
+export async function insertFactura(factura) {
+  const { error } = await supabase
+    .from('facturas')
+    .insert([factura])
+
+  if (error) {
+    if (error.code === '42501') throw new Error('Sin permisos para guardar facturas. Verifica las políticas de seguridad en Supabase.')
+    if (error.code === '23505') throw new Error('Esta factura ya fue registrada anteriormente.')
+    throw new Error('No se pudo guardar la factura. Intenta de nuevo.')
+  }
+}
