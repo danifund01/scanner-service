@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { processInvoiceImage } from '../services/visionService'
 import { insertFactura } from '../services/facturaService'
 
@@ -9,14 +9,41 @@ export default function InvoiceForm({ onFacturaCreada }) {
   const [step, setStep] = useState('')
   const [result, setResult] = useState(null)
   const [error, setError] = useState(null)
+  const [dragging, setDragging] = useState(false)
+  const inputRef = useRef(null)
 
-  function handleFileChange(e) {
-    const selected = e.target.files[0]
+  function selectFile(selected) {
     if (!selected) return
     setFile(selected)
     setPreview(URL.createObjectURL(selected))
     setResult(null)
     setError(null)
+  }
+
+  function handleFileChange(e) {
+    selectFile(e.target.files[0])
+  }
+
+  function handleDragOver(e) {
+    e.preventDefault()
+    setDragging(true)
+  }
+
+  function handleDragLeave(e) {
+    e.preventDefault()
+    setDragging(false)
+  }
+
+  function handleDrop(e) {
+    e.preventDefault()
+    setDragging(false)
+    const dropped = e.dataTransfer.files[0]
+    if (!dropped) return
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(dropped.type)) {
+      setError('Formato no permitido. Usa JPG, PNG o WEBP.')
+      return
+    }
+    selectFile(dropped)
   }
 
   async function handleSubmit(e) {
@@ -57,21 +84,33 @@ export default function InvoiceForm({ onFacturaCreada }) {
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         {/* Zona de carga */}
-        <label className="flex flex-col items-center justify-center w-full h-44 border-2 border-dashed border-zinc-700 rounded-xl bg-zinc-900 hover:border-emerald-600 hover:bg-zinc-800/50 transition-colors cursor-pointer">
+        <label
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          className={`flex flex-col items-center justify-center w-full h-44 border-2 border-dashed rounded-xl transition-colors cursor-pointer
+            ${dragging
+              ? 'border-emerald-500 bg-emerald-950/30'
+              : 'border-zinc-700 bg-zinc-900 hover:border-emerald-600 hover:bg-zinc-800/50'
+            }`}
+        >
           <div className="flex flex-col items-center gap-2 pointer-events-none">
-            <svg className="w-8 h-8 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <svg className={`w-8 h-8 ${dragging ? 'text-emerald-400' : 'text-zinc-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
             </svg>
             {file ? (
               <span className="text-emerald-400 text-sm font-medium">{file.name}</span>
             ) : (
               <>
-                <span className="text-zinc-300 text-sm font-medium">Haz click para subir una imagen</span>
+                <span className="text-zinc-300 text-sm font-medium">
+                  {dragging ? 'Suelta la imagen aquí' : 'Arrastra o haz click para subir'}
+                </span>
                 <span className="text-zinc-600 text-xs">JPG, PNG o WEBP</span>
               </>
             )}
           </div>
           <input
+            ref={inputRef}
             type="file"
             accept="image/jpeg,image/png,image/webp"
             onChange={handleFileChange}
