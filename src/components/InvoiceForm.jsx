@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { processInvoiceImage } from '../services/visionService'
 import { insertFactura } from '../services/facturaService'
 
@@ -9,14 +9,41 @@ export default function InvoiceForm({ onFacturaCreada }) {
   const [step, setStep] = useState('')
   const [result, setResult] = useState(null)
   const [error, setError] = useState(null)
+  const [dragging, setDragging] = useState(false)
+  const inputRef = useRef(null)
 
-  function handleFileChange(e) {
-    const selected = e.target.files[0]
+  function selectFile(selected) {
     if (!selected) return
     setFile(selected)
     setPreview(URL.createObjectURL(selected))
     setResult(null)
     setError(null)
+  }
+
+  function handleFileChange(e) {
+    selectFile(e.target.files[0])
+  }
+
+  function handleDragOver(e) {
+    e.preventDefault()
+    setDragging(true)
+  }
+
+  function handleDragLeave(e) {
+    e.preventDefault()
+    setDragging(false)
+  }
+
+  function handleDrop(e) {
+    e.preventDefault()
+    setDragging(false)
+    const dropped = e.dataTransfer.files[0]
+    if (!dropped) return
+    if (!['image/jpeg', 'image/png', 'image/webp', 'application/pdf'].includes(dropped.type)) {
+      setError('Formato no permitido. Usa JPG, PNG, WEBP o PDF.')
+      return
+    }
+    selectFile(dropped)
   }
 
   async function handleSubmit(e) {
@@ -57,36 +84,60 @@ export default function InvoiceForm({ onFacturaCreada }) {
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         {/* Zona de carga */}
-        <label className="flex flex-col items-center justify-center w-full h-44 border-2 border-dashed border-zinc-700 rounded-xl bg-zinc-900 hover:border-emerald-600 hover:bg-zinc-800/50 transition-colors cursor-pointer">
+        <label
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          className={`flex flex-col items-center justify-center w-full h-44 border-2 border-dashed rounded-xl transition-colors cursor-pointer
+            ${dragging
+              ? 'border-emerald-500 bg-emerald-950/30'
+              : 'border-zinc-700 bg-zinc-900 hover:border-emerald-600 hover:bg-zinc-800/50'
+            }`}
+        >
           <div className="flex flex-col items-center gap-2 pointer-events-none">
-            <svg className="w-8 h-8 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <svg className={`w-8 h-8 ${dragging ? 'text-emerald-400' : 'text-zinc-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
             </svg>
             {file ? (
               <span className="text-emerald-400 text-sm font-medium">{file.name}</span>
             ) : (
               <>
-                <span className="text-zinc-300 text-sm font-medium">Haz click para subir una imagen</span>
-                <span className="text-zinc-600 text-xs">JPG, PNG o WEBP</span>
+                <span className="text-zinc-300 text-sm font-medium">
+                  {dragging ? 'Suelta la imagen aquí' : 'Arrastra o haz click para subir'}
+                </span>
+                <span className="text-zinc-600 text-xs">JPG, PNG, WEBP o PDF</span>
               </>
             )}
           </div>
           <input
+            ref={inputRef}
             type="file"
-            accept="image/jpeg,image/png,image/webp"
+            accept="image/jpeg,image/png,image/webp,application/pdf"
             onChange={handleFileChange}
             className="hidden"
           />
         </label>
 
-        {/* Preview de imagen */}
+        {/* Preview: imagen o indicador de PDF */}
         {preview && (
           <div className="flex justify-center">
-            <img
-              src={preview}
-              alt="Vista previa"
-              className="max-h-56 rounded-lg border border-zinc-700 object-contain"
-            />
+            {file?.type === 'application/pdf' ? (
+              <div className="flex items-center gap-3 bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3">
+                <svg className="w-8 h-8 text-red-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                </svg>
+                <div className="flex flex-col">
+                  <span className="text-zinc-200 text-sm font-medium">{file.name}</span>
+                  <span className="text-zinc-500 text-xs">PDF listo para procesar</span>
+                </div>
+              </div>
+            ) : (
+              <img
+                src={preview}
+                alt="Vista previa"
+                className="max-h-56 rounded-lg border border-zinc-700 object-contain"
+              />
+            )}
           </div>
         )}
 
