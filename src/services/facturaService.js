@@ -1,5 +1,24 @@
 import { supabase } from '../supabaseClient'
 
+const BUCKET = 'factura-archivos'
+
+export async function uploadArchivo(file) {
+  const extension = file.name.split('.').pop()
+  const nombreArchivo = `factura_${Date.now()}.${extension}`
+
+  const { error } = await supabase.storage
+    .from(BUCKET)
+    .upload(nombreArchivo, file, { contentType: file.type })
+
+  if (error) {
+    if (error.message?.includes('security')) throw new Error('Sin permisos para subir archivos. Verifica las políticas del bucket en Supabase.')
+    throw new Error('No se pudo subir el archivo. Intenta de nuevo.')
+  }
+
+  const { data } = supabase.storage.from(BUCKET).getPublicUrl(nombreArchivo)
+  return data.publicUrl
+}
+
 export async function fetchFacturas() {
   const { data, error } = await supabase
     .from('facturas')

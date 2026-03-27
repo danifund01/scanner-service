@@ -195,17 +195,17 @@ export default function FacturasList({ facturas, loading, error, onEliminar }) {
       {/* Listado */}
       {!mostrarSkeleton && !error && !errorBusqueda && listaVisible.length > 0 && (
         <div className="flex flex-col gap-2">
-          <div className="hidden sm:grid grid-cols-[1fr_1fr_1fr_1fr_auto] px-4 py-2 text-xs font-medium text-zinc-500 uppercase tracking-widest">
+          <div className="hidden sm:grid grid-cols-[2fr_1fr_1fr_1fr_80px] px-4 py-2 text-xs font-medium text-zinc-500 uppercase tracking-widest">
             <span>Proveedor</span>
             <span>N° Factura</span>
             <span className="text-right">Monto</span>
             <span className="text-right">Fecha</span>
-            <span />
+            <span className="text-center">Acciones</span>
           </div>
           {listaVisible.map((factura, index) => (
             <div
               key={factura.id ?? index}
-              className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_1fr_1fr_auto] items-center gap-3 bg-zinc-900 border border-zinc-800 hover:border-zinc-700 rounded-xl px-4 py-3.5 transition-colors group"
+              className="grid grid-cols-1 sm:grid-cols-[2fr_1fr_1fr_1fr_80px] items-center gap-3 bg-zinc-900 border border-zinc-800 hover:border-zinc-700 rounded-xl px-4 py-3.5 transition-colors group"
             >
               <span className="text-zinc-100 font-medium text-sm truncate">
                 {factura.proveedor ?? '—'}
@@ -223,15 +223,32 @@ export default function FacturasList({ facturas, loading, error, onEliminar }) {
                   year: 'numeric',
                 })}
               </span>
-              <button
-                onClick={() => abrirModal(factura)}
-                className="p-1.5 rounded-lg text-zinc-600 cursor-pointer hover:text-red-400 hover:bg-red-950/40 transition-colors opacity-100 ml-auto md:m-auto md:opacity-0 md:group-hover:opacity-100"
-                title="Eliminar factura"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-                </svg>
-              </button>
+              <div className="flex items-center justify-center gap-1">
+                {/* Ver archivo */}
+                {factura.archivo_url && (
+                  <a
+                    href={factura.archivo_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-1.5 rounded-lg text-zinc-600 hover:text-emerald-400 hover:bg-emerald-950/40 transition-colors"
+                    title="Ver archivo original"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                    </svg>
+                  </a>
+                )}
+                {/* Eliminar */}
+                <button
+                  onClick={() => abrirModal(factura)}
+                  className="p-1.5 rounded-lg text-zinc-600 cursor-pointer hover:text-red-400 hover:bg-red-950/40 transition-colors"
+                  title="Eliminar factura"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                  </svg>
+                </button>
+              </div>
             </div>
           ))}
         </div>
