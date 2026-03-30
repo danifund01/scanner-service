@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import { processInvoiceImage } from '../services/visionService'
-import { insertFactura } from '../services/facturaService'
+import { insertFactura, uploadArchivo } from '../services/facturaService'
 
 export default function InvoiceForm({ onFacturaCreada }) {
   const [file, setFile] = useState(null)
@@ -58,11 +58,14 @@ export default function InvoiceForm({ onFacturaCreada }) {
     try {
       const extracted = await processInvoiceImage(file, setStep)
 
-      setStep('Guardando en base de datos...')
-      await insertFactura(extracted)
+      setStep('Subiendo archivo...')
+      const archivo_url = await uploadArchivo(file)
 
-      setResult(extracted)
-      onFacturaCreada(extracted)
+      setStep('Guardando en base de datos...')
+      await insertFactura({ ...extracted, archivo_url })
+
+      setResult({ ...extracted, archivo_url })
+      onFacturaCreada({ ...extracted, archivo_url })
     } catch (err) {
       setError(err.message)
     } finally {
