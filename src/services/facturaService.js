@@ -2,6 +2,26 @@ import { supabase } from "../supabaseClient";
 
 const BUCKET = "factura-archivos";
 
+export async function uploadArchivo(file) {
+  const extension = file.name.split(".").pop();
+  const nombreArchivo = `factura_${Date.now()}.${extension}`;
+
+  const { error } = await supabase.storage
+    .from(BUCKET)
+    .upload(nombreArchivo, file, { contentType: file.type });
+
+  if (error) {
+    if (error.message?.includes("security"))
+      throw new Error(
+        "Sin permisos para subir archivos. Verifica las políticas del bucket en Supabase.",
+      );
+    throw new Error("No se pudo subir el archivo. Intenta de nuevo.");
+  }
+
+  const { data } = supabase.storage.from(BUCKET).getPublicUrl(nombreArchivo);
+  return data.publicUrl;
+}
+
 export async function fetchFacturas() {
   const { data, error } = await supabase
     .from("facturas")
@@ -27,7 +47,7 @@ export async function searchFacturas(query) {
   return data;
 }
 
-export async function deleteFactura(id, archivoUrl) {
+export async function deleteFactura(id) {
   const { error } = await supabase.from("facturas").delete().eq("id", id);
 
   if (error) {
@@ -36,11 +56,6 @@ export async function deleteFactura(id, archivoUrl) {
         "Sin permisos para eliminar facturas. Verifica las políticas de seguridad en Supabase.",
       );
     throw new Error("No se pudo eliminar la factura. Intenta de nuevo.");
-  }
-
-  if (archivoUrl) {
-    const nombreArchivo = archivoUrl.split("/").pop();
-    await supabase.storage.from(BUCKET).remove([nombreArchivo]);
   }
 }
 
@@ -65,24 +80,4 @@ export async function insertFactura(factura) {
       throw new Error("Esta factura ya fue registrada anteriormente.");
     throw new Error("No se pudo guardar la factura. Intenta de nuevo.");
   }
-}
-
-export async function uploadArchivo(file) {
-  const extension = file.name.split(".").pop();
-  const nombreArchivo = `factura_${Date.now()}.${extension}`;
-
-  const { error } = await supabase.storage
-    .from(BUCKET)
-    .upload(nombreArchivo, file, { contentType: file.type });
-
-  if (error) {
-    if (error.message?.includes("security"))
-      throw new Error(
-        "Sin permisos para subir archivos. Verifica las políticas del bucket en Supabase.",
-      );
-    throw new Error("No se pudo subir el archivo. Intenta de nuevo.");
-  }
-
-  const { data } = supabase.storage.from(BUCKET).getPublicUrl(nombreArchivo);
-  return data.publicUrl;
 }

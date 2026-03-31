@@ -64,7 +64,7 @@ export default function InvoiceForm({ onFacturaCreada }) {
       setStep('Guardando en base de datos...')
       await insertFactura({ ...extracted, archivo_url })
 
-      setResult({ ...extracted, archivo_url })
+      setResult(extracted)
       onFacturaCreada({ ...extracted, archivo_url })
     } catch (err) {
       setError(err.message)
