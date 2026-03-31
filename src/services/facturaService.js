@@ -46,11 +46,15 @@ export async function deleteFactura(id, archivoUrl) {
 
 export async function insertFactura(factura) {
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  const userId = session?.user?.id;
+  if (!userId) throw new Error("Sesión expirada. Vuelve a iniciar sesión.");
+
   const { error } = await supabase
     .from("facturas")
-    .insert([{ ...factura, user_id: user.id }]);
+    .insert([{ ...factura, user_id: userId }]);
 
   if (error) {
     if (error.code === "42501")
